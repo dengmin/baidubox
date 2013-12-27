@@ -45,13 +45,7 @@ playlistUrl = 'http://play.baidu.com/data/playlist/getlist'
 playlistDetailUrl = 'http://play.baidu.com/data/playlist/getDetail'
 songFormatUrl = 'http://yinyueyun.baidu.com/data/cloud/download'
 downloadUrl = 'http://yinyueyun.baidu.com/data/cloud/downloadsongfile'
-
-
-def get_by_url(url, params):
-    url = '%s?%s' %(url, urllib.urlencode(params))
-    req = urllib2.Request(url = url)
-    resp = urllib2.urlopen(req).read()
-    return resp
+songInfoUrl = 'http://play.baidu.com/data/music/songinfo'
 
 class BaiduMusicBox(object):
 
@@ -77,31 +71,43 @@ class BaiduMusicBox(object):
         urllib2.install_opener(opener)
         urllib2.urlopen('http://play.baidu.com/')
 
+    def request(self, url, method='GET', params={}, headers={}):
+    	params = urllib.urlencode(params)
+    	if method == 'POST':
+    		print params
+    		request = urllib2.Request(url, params)
+    	else:
+    		url = '%s?%s' %(url, params)
+    		request = urllib2.Request(url, None)
+
+    	if headers:
+    		for key,value in headers.items():
+    			request.add_header(key, value)
+    	try:
+    		response = urllib2.urlopen(request)
+    	except urllib2.HTTPError as e:
+    		print "Error code: ", e
+    	else:
+    		self.cjar.save()
+    		return response.read()
 
     def get_token(self):
         print 'request token...'
-        response = urllib2.urlopen(apiUrl).read()
-        tokenreg = re.search(
-            "bdPass\.api\.params\.login_token='(?P<tokenVal>\w+)';", response)
+        response = self.request(url=apiUrl)
+        tokenreg = re.search("bdPass\.api\.params\.login_token='(?P<tokenVal>\w+)';", response)
         if tokenreg:
             token = tokenreg.group("tokenVal")
+            print 'get token', token
             return token
         return None
 
     def __signin(self):
         print 'login...'
         self.data["token"] = self.get_token()
-
-        req = urllib2.Request(
-            url=loginUrl,
-            headers=HTTPHeader,
-            data=urllib.urlencode(self.data))
-
-        resp = urllib2.urlopen(req).read()
+        resp = self.request(url=loginUrl,headers=HTTPHeader,params=self.data,method='POST')
         bdussreg = re.search("hao123Param=(?P<bdussVal>\w+)&", resp)
         if bdussreg:
             self.__bduss = bdussreg.group('bdussVal')
-            print 'get __bduss:', self.__bduss
 
         error_code = re.findall("error\=(\d+)", resp)
         if error_code:
@@ -112,11 +118,8 @@ class BaiduMusicBox(object):
                 print 'invlid user'
             elif error_code == 4:
                 print 'password error'
-
         print 'Login Success!'
         self.is_login = True
-        self.cjar.save()
-
         self.__login_cross_domain()
 
     def __login_cross_domain(self):
@@ -124,32 +127,27 @@ class BaiduMusicBox(object):
             'bdu' : self.__bduss,
             't'   : int(time.time())
         }
-        url='%s?%s' % (crossUrl,urllib.urlencode(params))
-        req = urllib2.Request(url)
         print 'cross domain '
-        urllib2.urlopen(req)
-        print 'cross domain success'
-        self.cjar.save()
+        self.request(url=crossUrl, params=params)
 
     def get_playlist(self):
         if not self.is_login:
             print 'no login.'
             self.__signin()
-        params = {
-            't'   : int(time.time())
-        }
+
         print 'Request play list...'
-        resp = get_by_url(playlistUrl, params)
+        resp = self.request(url=playlistUrl, params={'t':int(time.time())})
         return json.loads(resp)
-        
+
     def download_playlist(self):
         playlist = self.get_playlist()
         if playlist['errorCode'] == 22000:
             playlist = playlist['data']['play_list']
             if playlist:
                 for l in playlist:
-                    self.get_list_detail(l['listId'])
-    
+                    songids = self.get_list_detail(l['listId'])
+                    self.get_song_info(songids)
+
     def get_list_detail(self, listid):
         params = {
             'sid' : 1,
@@ -157,22 +155,28 @@ class BaiduMusicBox(object):
             '_' : int(time.time())
         }
         print 'get playlist detail for playListId', listid
-        resp = get_by_url(playlistDetailUrl, params)
+        resp = self.request(url=playlistDetailUrl, params=params)
         resp_data = json.loads(resp)
         ids = resp_data['data']['songIds']
         print 'get songIds', ids
-        if ids:
-            for sid in ids:
-                self.get_song_format(sid)
+        return ids
+
+    def get_song_info(self, songids):
+    	print 'get songinfo.'
+    	songids = ','.join(songids)
+    	response = self.request(url=songInfoUrl, method='POST',params={'songIds':songids})
+    	response = json.loads(response.decode('gbk'))
+    	songlist = response['data']['songList']
+    	for song in songlist:
+    		print song
 
     def get_song_format(self, songid):
         params = {'songIds': songid}
         print 'get song format...', songid
-        resp = get_by_url(songFormatUrl, params)
+        resp = self.request(url=songFormatUrl, params=params)
         resp_data = json.loads(resp)
         formats = resp_data['data']['data']
         formats.pop('original')
-        #songIds=516015&rate=320&format=mp3
         for k,v in formats.items():
             pp = {
                 'songIds' : v['songId'],
@@ -185,7 +189,6 @@ class BaiduMusicBox(object):
             f = open(filename, 'wb+')
             f.write(response)
             f.close()
-
             print filename, 'done!'
 
 
