@@ -189,8 +189,6 @@ class BaiduMusicBox(object):
             print filename, 'done!'
 
 
-
-
-
-baidubox = BaiduMusicBox('594611460@qq.com', '19871010')
-baidubox.download_playlist()
+if __name__ == '__main__':
+    baidubox = BaiduMusicBox('594611460@qq.com', 'xxxxx')
+    baidubox.download_playlist()
