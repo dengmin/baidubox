@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+# coding:utf-8
 import urllib2
 import urllib
 import cookielib
@@ -7,6 +8,7 @@ import re
 import copy
 import time
 import json
+from download import download
 
 HTTPHeader = {
     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
@@ -167,26 +169,6 @@ class BaiduMusicBox(object):
     def get_song_info(self, songids):
         '''
         传入歌曲的id列表 返回这些歌曲的详细信息
-
-        albumId: 183666
-        albumName: "Beyond The Ultimate Story"
-        allRate: "24,64,128,192,256,320,flac"
-        area: 1
-        artistId: "1100"
-        artistName: "Beyond"
-        compress_status: 1
-        del_status: 0
-        distribution: "0000000000,0000000000,0000000000,0000000000,0000000000,0000000000,0000000000,0000000000,0000000000,0000000000"
-        fchar: "B"
-        queryId: "745994"
-        relateStatus: "0"
-        resourceType: "0"
-        songId: "745994"
-        songName: "午夜怨曲"
-        songPicBig: "http://a.hiphotos.baidu.com/ting/pic/item/9c16fdfaaf51f3de2ff8784596eef01f3a29794d.jpg"
-        songPicRadio: "http://a.hiphotos.baidu.com/ting/pic/item/91ef76c6a7efce1b0a6109ebad51f3deb48f654d.jpg"
-        songPicSmall: "http://c.hiphotos.baidu.com/ting/pic/item/b7fd5266d0160924434f633ad60735fae6cd34ad.jpg"
-
         '''
         print 'get songinfo.'
         response = self.request(
@@ -197,28 +179,25 @@ class BaiduMusicBox(object):
             self.do_download(song)
 
     def do_download(self, song):
-        print song
-
-    def get_song_format(self, songid):
-        params = {'songIds': songid}
-        print 'get song format...', songid
-        resp = self.request(url=songFormatUrl, params=params)
-        resp_data = json.loads(resp)
-        formats = resp_data['data']['data']
-        formats.pop('original')
-        for k, v in formats.items():
+        song_formats = self.get_song_format(song.get('songId'))
+        for k, v in song_formats.items():
             pp = {
                 'songIds': v['songId'],
                 'rate': v['rate'],
                 'format': v['format']
             }
-            filename = '%s_%s.%s' % (v['songId'], k, v['format'])
-            print 'download .', filename
-            response = get_by_url(downloadUrl, pp)
-            f = open(filename, 'wb+')
-            f.write(response)
-            f.close()
-            print filename, 'done!'
+            filename = '%s_%s.%s' % (song.get('songName'), k, v['format'])
+            download(downloadUrl, pp, filename)
+
+    def get_song_format(self, songid):
+        if songid:
+            params = {'songIds': songid}
+            print 'get song format...', songid
+            resp = self.request(url=songFormatUrl, params=params)
+            resp_data = json.loads(resp)
+            formats = resp_data['data']['data']
+            formats.pop('original')
+            return formats
 
 
 if __name__ == '__main__':
