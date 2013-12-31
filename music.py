@@ -8,7 +8,11 @@ import re
 import copy
 import time
 import json
+import sys
 from download import download
+
+BAIDU_USERNAME = '594611460@qq.com'
+BAIDU_PASSWORD = 'xxxxxx'
 
 HTTPHeader = {
     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
@@ -60,6 +64,7 @@ class BaiduMusicBox(object):
             'username': username,
             'password': password
         })
+
         self.is_login = False
         self.cjar = cookielib.LWPCookieJar(COOKIE_FILE)
         if os.path.isfile(COOKIE_FILE):
@@ -69,7 +74,6 @@ class BaiduMusicBox(object):
                     print 'login Success'
                     self.is_login = True
                     self.__bduss = cookie.value
-                    print 'cookie dbuss: ', self.__bduss
         opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(self.cjar))
         urllib2.install_opener(opener)
         urllib2.urlopen('http://play.baidu.com/')
@@ -99,7 +103,6 @@ class BaiduMusicBox(object):
             "bdPass\.api\.params\.login_token='(?P<tokenVal>\w+)';", response)
         if tokenreg:
             token = tokenreg.group("tokenVal")
-            print 'get token', token
             return token
         return None
 
@@ -109,21 +112,25 @@ class BaiduMusicBox(object):
         resp = self.request(url=loginUrl, headers=HTTPHeader,
                             params=self.data, method='POST')
         bdussreg = re.search("hao123Param=(?P<bdussVal>\w+)&", resp)
+        print bdussreg
         if bdussreg:
             self.__bduss = bdussreg.group('bdussVal')
 
-        error_code = re.findall("error\=(\d+)", resp)
-        if error_code:
-            error_code = int(error_code[0])
-            if error_code == 257:
-                print 'need Verification Code'
-            elif error_code == 2:
-                print 'invlid user'
-            elif error_code == 4:
-                print 'password error'
-        print 'Login Success!'
-        self.is_login = True
-        self.__login_cross_domain()
+            error_code = re.findall("error\=(\d+)", resp)
+            if error_code:
+                error_code = int(error_code[0])
+                if error_code == 257:
+                    print 'need Verification Code'
+                elif error_code == 2:
+                    print 'invlid user'
+                elif error_code == 4:
+                    print 'password error'
+            print 'Login Success!'
+            self.is_login = True
+            self.__login_cross_domain()
+        else:
+            print 'login failure'
+            sys.exit(-1)
 
     def __login_cross_domain(self):
         params = {
@@ -134,7 +141,7 @@ class BaiduMusicBox(object):
         self.request(url=crossUrl, params=params)
 
     def get_playlist(self):
-        '''获取我的播放列表'''
+        '''获取我的歌单'''
         if not self.is_login:
             print 'no login.'
             self.__signin()
@@ -153,7 +160,7 @@ class BaiduMusicBox(object):
                     self.get_song_info(songids)
 
     def get_list_detail(self, listid):
-        '''获取一个播放列表下面的所有歌曲的id'''
+        '''获取一个歌单下面的所有歌曲的id'''
         params = {
             'sid': 1,
             'playListId': listid,
@@ -163,7 +170,6 @@ class BaiduMusicBox(object):
         resp = self.request(url=playlistDetailUrl, params=params)
         resp_data = json.loads(resp)
         ids = resp_data['data']['songIds']
-        print 'get songIds', ids
         return ids
 
     def get_song_info(self, songids):
@@ -201,5 +207,5 @@ class BaiduMusicBox(object):
 
 
 if __name__ == '__main__':
-    baidubox = BaiduMusicBox('594611460@qq.com', 'xxxxx')
+    baidubox = BaiduMusicBox(BAIDU_USERNAME, BAIDU_PASSWORD)
     baidubox.download_playlist()

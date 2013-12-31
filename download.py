@@ -7,7 +7,11 @@ import urllib
 import urllib2
 
 def download(url, params, destination, blocksize=8192):
-    print destination
+    """
+    把百度音乐从服务器上下载到本地
+    支持断点续传
+    简单的文件下载进度
+    """
     if params:
         params = urllib.urlencode(params)
         url = '%s?%s' % (url, params)
