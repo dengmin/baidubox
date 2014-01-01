@@ -11,9 +11,9 @@ baidubox
 
 ##使用:
 
-1. 编辑`music.py`,替换 `BAIDU_USERNAME` 和 `BAIDU_PASSWORD` 两个变量的值为你的百度账号和密码
+1. 编辑`run.py`,替换 `BAIDU_USERNAME` 和 `BAIDU_PASSWORD` 两个变量的值为你的百度账号和密码
 
 2. 运行
 ```
-python music.py
+python run.py
 ```

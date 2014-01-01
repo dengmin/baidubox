@@ -16,7 +16,8 @@ def download(url, params, destination, blocksize=8192):
         params = urllib.urlencode(params)
         url = '%s?%s' % (url, params)
     current_pwd = os.path.dirname(os.path.realpath(__file__))
-    dest_dir = os.path.join(current_pwd, 'downloads')
+    download_dir = os.path.split(current_pwd)[0]
+    dest_dir = os.path.join(download_dir, 'downloads')
     if not os.path.exists(dest_dir):
         os.makedirs(dest_dir)
 
