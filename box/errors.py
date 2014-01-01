@@ -14,3 +14,5 @@ class InvalidUserError(BaseError): pass
 class PasswordError(BaseError): pass
 class LoginError(BaseError): pass
 class RequestTokenError(BaseError): pass
+
+class ApiError(BaseError): pass

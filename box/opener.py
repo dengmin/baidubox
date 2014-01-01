@@ -4,6 +4,7 @@ import os
 import urllib
 import urllib2
 import cookielib
+import gzip
 
 class Opener(object):
     def open(self, url):

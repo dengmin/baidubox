@@ -8,4 +8,4 @@ BAIDU_PASSWORD = 'xxxxxx'
 
 if __name__ == '__main__':
     baidubox = BaiduMusicBox(BAIDU_USERNAME, BAIDU_PASSWORD)
-    baidubox.download_playlist()
+    baidubox.fetch()
