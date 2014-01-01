@@ -5,6 +5,20 @@ import os
 import sys
 import urllib
 import urllib2
+import threading
+
+class DownloadThread(threading.Thread):
+    def __init__(self,quene):
+        threading.Thread.__init__(self)
+        self.queue = quene
+
+    def run(self):
+        while True:
+            if not self.queue.empty():
+                item = self.queue.get()
+                download(item['url'], item['params'], item['dest'])
+            else:
+                break
 
 def download(url, params, destination, blocksize=8192):
     """
@@ -15,13 +29,7 @@ def download(url, params, destination, blocksize=8192):
     if params:
         params = urllib.urlencode(params)
         url = '%s?%s' % (url, params)
-    current_pwd = os.path.dirname(os.path.realpath(__file__))
-    download_dir = os.path.split(current_pwd)[0]
-    dest_dir = os.path.join(download_dir, 'downloads')
-    if not os.path.exists(dest_dir):
-        os.makedirs(dest_dir)
 
-    destination = os.path.join(dest_dir, destination)
     print "Downloading to %s" %(destination)
 
     resume = os.path.exists(destination)

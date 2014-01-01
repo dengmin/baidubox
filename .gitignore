@@ -1,2 +1,4 @@
 *.pyc
 .project
+downloads
+.baidu_cookie

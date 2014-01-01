@@ -24,6 +24,18 @@ class BaiduMusicBox(object):
         })
 
         self.is_login = False
+        self.__check_cookie()
+        self.__init_download_dir()
+
+    def __init_download_dir(self):
+        current_pwd = os.path.dirname(os.path.realpath(__file__))
+        parent_dir = os.path.split(current_pwd)[0]
+        download_dir = os.path.join(parent_dir, 'downloads')
+        if not os.path.exists(download_dir):
+            os.makedirs(download_dir)
+        self.download_dir = download_dir
+
+    def __check_cookie(self):
         if os.path.isfile(COOKIE_FILE):
             self.opener.cjar.revert(COOKIE_FILE)
             for cookie in self.opener.cjar:
@@ -93,6 +105,7 @@ class BaiduMusicBox(object):
                 for l in playlist:
                     print 'get playlist detail for playList >> ', l['listTitle']
                     songids = self.get_list_detail(l['listId'])
+                    #songids = ['744184']
                     self.get_song_info(songids)
 
     def get_list_detail(self, listid):
@@ -120,14 +133,15 @@ class BaiduMusicBox(object):
 
     def __do_download(self, song):
         song_formats = self.get_song_format(song.get('songId'))
-        for k, v in song_formats.items():
-            pp = {
-                'songIds': v['songId'],
-                'rate': v['rate'],
-                'format': v['format']
-            }
-            filename = '%s_%s.%s' % (song.get('songName'), k, v['format'])
-            download(constants.downloadUrl, pp, filename)
+        for v in song_formats.values():
+            if v:
+                params = {
+                    'songIds': v['songId'],
+                    'rate': v['rate'],
+                    'format': v['format']
+                }
+                filename = '%s_%s.%s' % (song.get('songName'), v['rate'], v['format'])
+                download(constants.downloadUrl, params, os.path.join(self.download_dir, filename))
 
     def get_song_format(self, songid):
         if songid:
