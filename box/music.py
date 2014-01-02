@@ -1,12 +1,8 @@
 #! /usr/bin/env python
 # coding:utf-8
 import os
-import re
 import copy
-import time
-import json
 from box import constants
-from box import errors
 from api import BaiduAPI
 from box.opener import BuiltinOpener
 from box.download import download
@@ -30,6 +26,12 @@ class BaiduMusicBox(object):
         if not os.path.exists(download_dir):
             os.makedirs(download_dir)
         self.download_dir = download_dir
+
+    def search(self,keyword):
+        response = self.api.search(keyword)
+        songs = response.get('song_list')
+        for song in songs:
+            print song.get('song_id'),song.get('title')
 
     def fetch(self):
         response = self.api.get_playlist()

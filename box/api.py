@@ -126,3 +126,21 @@ class BaiduAPI(object):
             if response:
                 return response.get('data')
 
+    def search(self, keyword,page_no=1, page_size=30):
+        """ Search songs with keywords"""
+        if keyword:
+            params = {
+                "method": "baidu.ting.search.common",
+                "format": "json",
+                "from": "android",
+                "version": "2.4.0",
+                "page_size": page_size,
+                "page_no": page_no,
+                "query": keyword,
+            }
+            headers = {
+                "Referer": "http://pc.music.baidu.com",
+                "User-Agent": "bmpc_1.0.0"
+                }
+            response = self.request(url=constants.tingApiUrl,params=params, headers=headers)
+            return json.loads(response)

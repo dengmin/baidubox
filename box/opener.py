@@ -4,13 +4,17 @@ import os
 import urllib
 import urllib2
 import cookielib
-import gzip
+
+def undeflate(data):
+    import zlib
+    return zlib.decompress(data, -zlib.MAX_WBITS)
 
 class Opener(object):
     def open(self, url):
         raise NotImplementedError
 
     def ungzip(self, fileobj):
+        import gzip
         gz = gzip.GzipFile(fileobj=fileobj, mode='rb')
         try:
             return gz.read()
@@ -44,6 +48,9 @@ class BuiltinOpener(Opener):
         else:
             self.cjar.save(self.cookie_filename)
             is_gzip = resp.headers.dict.get('content-encoding') == 'gzip'
+            is_deflate = resp.headers.dict.get('content-encoding') == 'deflate'
             if is_gzip:
                 return self.ungzip(resp)
+            if is_deflate:
+                return undeflate(resp)
             return resp.read()
