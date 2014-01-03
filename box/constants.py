@@ -13,6 +13,13 @@ HTTPHeader = {
     "User-Agent": 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/31.0.1650.63 Safari/537.36'
 }
 
+PLAY_HTTPHEADER = {
+    "Referer": 'http://play.baidu.com/',
+    'Host'    : 'play.baidu.com',
+    "User-Agent" : HTTPHeader['User-Agent'],
+    'X-Requested-With' : 'XMLHttpRequest'
+}
+
 PostData = {
     'staticpage': 'http://play.baidu.com/player/v2Jump.html',
     'charset': 'UTF-8',
@@ -41,3 +48,5 @@ downloadUrl = 'http://yinyueyun.baidu.com/data/cloud/downloadsongfile'
 songInfoUrl = 'http://play.baidu.com/data/music/songinfo'
 tingApiUrl = 'http://tingapi.ting.baidu.com/v1/restserver/ting'
 collectListUrl = 'http://play.baidu.com/data/mbox/collectlist'
+listenHistoryUrl = 'http://play.baidu.com/data/mbox/listenhistory'
+downloadHistoryUrl = 'http://play.baidu.com/data/mbox/getdownload'

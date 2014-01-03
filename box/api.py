@@ -132,6 +132,7 @@ class BaiduAPI(object):
                 return response.get('data')
 
     def get_collect_list(self, start=0, size=200):
+        """我收藏的音乐"""
         if not self.is_login:
             self.login()
         params = {
@@ -141,15 +142,39 @@ class BaiduAPI(object):
             'size'       : size,
             '_'          : int(time.time())
         }
-        headers = {
-            "Referer": constants.HTTPHeader['Referer'],
-            'Host'    : 'play.baidu.com',
-            "User-Agent" : constants.HTTPHeader['User-Agent']
-        }
-        response = self.request(url=constants.collectListUrl, params=params,headers=headers)
+        response = self.request(url=constants.collectListUrl, params=params,headers=constants.PLAY_HTTPHEADER)
         response = self.__process_data(response)
         if response:
             return response
+
+    def get_listen_history(self, stype='late',start=0, size=200):
+        """查询我的播放记录
+        stype参数: often(我最常听), late(播放记录)
+        返回 {'songList':[], 'totle': 0}
+        """
+        if not self.is_login:
+            self.login()
+        params = {
+            'type'       : stype,
+            'start'      : start,
+            'size'       : size,
+            '_'          : int(time.time())
+        }
+        response = self.request(url=constants.listenHistoryUrl, params=params,headers=constants.PLAY_HTTPHEADER)
+        return self.__process_data(response)
+
+    def get_download_history(self):
+        """我的下载历史
+        return {"songList":[],}
+        """
+        if not self.is_login:
+            self.login()
+        params = {
+            'start'      : start,
+            'size'       : size,
+            '_'          : int(time.time())
+        }
+        response = self.request(url=constants.downloadHistoryUrl, params=params,headers=constants.PLAY_HTTPHEADER)
 
     def search(self, keyword,page_no=1, page_size=30):
         """ Search songs with keywords"""
@@ -164,8 +189,8 @@ class BaiduAPI(object):
                 "query": keyword,
             }
             headers = {
-                "Referer": "http://pc.music.baidu.com",
-                "User-Agent": "bmpc_1.0.0"
-                }
+            "Referer": "http://pc.music.baidu.com",
+            "User-Agent": "bmpc_1.0.0"
+            }
             response = self.request(url=constants.tingApiUrl,params=params, headers=headers)
             return json.loads(response)
