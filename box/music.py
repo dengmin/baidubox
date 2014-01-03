@@ -33,6 +33,10 @@ class BaiduMusicBox(object):
         for song in songs:
             print song.get('song_id'),song.get('title')
 
+    def collect_list(self):
+        response = self.api.get_collect_list()
+        print response
+
     def fetch(self):
         response = self.api.get_playlist()
         if response:

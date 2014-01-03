@@ -60,6 +60,7 @@ class BaiduAPI(object):
                 raise errors.PasswordError('password error')
 
     def login(self):
+        self.request(url='http://play.baidu.com/')
         self.data["token"] = self.get_token()
         response = self.request(url=constants.loginUrl,
                 headers=constants.HTTPHeader,
@@ -109,6 +110,8 @@ class BaiduAPI(object):
         '''
         传入歌曲的id列表 返回这些歌曲的详细信息
         '''
+        if not self.is_login:
+            self.login()
         if isinstance(songids, list):
             response = self.request(url=constants.songInfoUrl, method='POST',
                 params={'songIds': ','.join(songids)})
@@ -120,11 +123,33 @@ class BaiduAPI(object):
 
     def get_song_format(self, songid):
         """获取一首歌曲所支持的音频格式"""
+        if not self.is_login:
+            self.login()
         if songid:
             response = self.request(url=constants.songFormatUrl, params={'songIds': songid})
             response = self.__process_data(response)
             if response:
                 return response.get('data')
+
+    def get_collect_list(self, start=0, size=200):
+        if not self.is_login:
+            self.login()
+        params = {
+            'cloud_type' : 0,
+            'type'       : 'song',
+            'start'      : start,
+            'size'       : size,
+            '_'          : int(time.time())
+        }
+        headers = {
+            "Referer": constants.HTTPHeader['Referer'],
+            'Host'    : 'play.baidu.com',
+            "User-Agent" : constants.HTTPHeader['User-Agent']
+        }
+        response = self.request(url=constants.collectListUrl, params=params,headers=headers)
+        response = self.__process_data(response)
+        if response:
+            return response
 
     def search(self, keyword,page_no=1, page_size=30):
         """ Search songs with keywords"""
@@ -132,7 +157,7 @@ class BaiduAPI(object):
             params = {
                 "method": "baidu.ting.search.common",
                 "format": "json",
-                "from": "android",
+                "from": "bmpc",
                 "version": "2.4.0",
                 "page_size": page_size,
                 "page_no": page_no,
