@@ -49,12 +49,14 @@ class BaiduMusicBox(object):
 
     def __do_download(self, song):
         song_formats = self.api.get_song_format(song.get('songId'))
-        for v in song_formats.values():
+        fmts = song_formats.values()
+        for v in fmts:
             if v:
-                params = {
-                    'songIds': v['songId'],
-                    'rate': v['rate'],
-                    'format': v['format']
-                }
-                filename = '%s_%s.%s' % (song.get('songName'), v['rate'], v['format'])
-                download(constants.downloadUrl, params, os.path.join(self.download_dir, filename))
+                if v['format'] =='flac':
+                    params = {
+                        'songIds': v['songId'],
+                        'rate': v['rate'],
+                        'format': v['format']
+                    }
+                    filename = '%s_%s.%s' % (song.get('songName'), v['rate'], v['format'])
+                    download(constants.downloadUrl, params, os.path.join(self.download_dir, filename))

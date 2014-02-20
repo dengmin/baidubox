@@ -78,7 +78,7 @@ class BaiduAPI(object):
             raise errors.LoginError('login error. please try again.')
 
     def __process_data(self, response):
-        response = json.loads(response.decode('gbk'))
+        response = json.loads(response)
         if response.get('errorCode') == 22000 or response.get('errorCode') == 0:
             if response.get('data'):
                 return response.get('data')
