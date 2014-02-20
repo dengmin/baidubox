@@ -49,14 +49,16 @@ class BaiduMusicBox(object):
 
     def __do_download(self, song):
         song_formats = self.api.get_song_format(song.get('songId'))
-        fmts = song_formats.values()
-        for v in fmts:
-            if v:
-                if v['format'] =='flac':
-                    params = {
-                        'songIds': v['songId'],
-                        'rate': v['rate'],
-                        'format': v['format']
-                    }
-                    filename = '%s_%s.%s' % (song.get('songName'), v['rate'], v['format'])
-                    download(constants.downloadUrl, params, os.path.join(self.download_dir, filename))
+        flac_fmt = [v for v in  song_formats.values() if v and v['format'] == 'flac']
+        if flac_fmt:
+            flac_v = flac_fmt[0]
+            params = {
+                'songIds': flac_v['songId'],
+                'rate': flac_v['rate'],
+                'format': flac_v['format']
+            }
+            artistName = song.get('artistName') if song.get('artistName') else 'UnKnown'
+            filename = '%s-%s.flac' % (artistName, song.get('songName'))
+            download(constants.downloadUrl, params, os.path.join(self.download_dir, filename))
+        else:
+            print '[ %s ] no flac format!' %(song.get('songName'))
