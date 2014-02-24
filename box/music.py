@@ -34,14 +34,30 @@ class BaiduMusicBox(object):
             print song.get('song_id'),song.get('title')
 
     def collect_list(self):
+        print u'我的收藏'
         response = self.api.get_collect_list()
-        print response
-
+        print u'配额: %s ,共收藏 %s 首' %(response.get('quota'), response.get('total'))
+        song_id_list = response.get("songList")
+        song_id_list = [str(item.get('id')) for item in song_id_list]
+        songList = self.api.get_song_info(song_id_list)
+        for song in songList:
+            self.__do_download(song)
+    
+    def get_listen_history(self):
+        print u'我的播放记录'
+        response = self.api.get_listen_history()
+        song_id_list = response.get('songList')
+        song_id_list = map(str, song_id_list)
+        songList = self.api.get_song_info(song_id_list)
+        for song in songList:
+            print song.get('songName')
+            self.__do_download(song)
+    
     def fetch(self):
         response = self.api.get_playlist()
         if response:
             for plist in response:
-                print 'get playlist detail for playList >> ', plist['listTitle']
+                print u'获取播放列表 >> ', plist['listTitle']
                 songids = self.api.get_list_detail(plist.get('listId'))
                 songlist = self.api.get_song_info(songids)
                 for song in songlist:
