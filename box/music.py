@@ -42,7 +42,7 @@ class BaiduMusicBox(object):
         songList = self.api.get_song_info(song_id_list)
         for song in songList:
             self.__do_download(song)
-    
+
     def get_listen_history(self):
         print u'我的播放记录'
         response = self.api.get_listen_history()
@@ -52,7 +52,7 @@ class BaiduMusicBox(object):
         for song in songList:
             print song.get('songName')
             self.__do_download(song)
-    
+
     def fetch(self):
         response = self.api.get_playlist()
         if response:
@@ -67,14 +67,20 @@ class BaiduMusicBox(object):
         song_formats = self.api.get_song_format(song.get('songId'))
         flac_fmt = [v for v in  song_formats.values() if v and v['format'] == 'flac']
         if flac_fmt:
-            flac_v = flac_fmt[0]
-            params = {
-                'songIds': flac_v['songId'],
-                'rate': flac_v['rate'],
-                'format': flac_v['format']
-            }
-            artistName = song.get('artistName') if song.get('artistName') else 'UnKnown'
-            filename = '%s-%s.flac' % (artistName, song.get('songName'))
-            download(constants.downloadUrl, params, os.path.join(self.download_dir, filename))
+            item = flac_fmt[0]
         else:
-            print '[ %s ] no flac format!' %(song.get('songName'))
+            print '[ %s ] no flac format!' %(song.get('songName')) , 'download mp3 format'
+            mp3_fmt = [v for v in song_formats.values() if v and v['format'] == 'mp3']
+            #取出比特率最高的
+            item = max(mp3_fmt, key=lambda x:x['rate'])
+        params = {
+            'songIds': item['songId'],
+            'rate': item['rate'],
+            'format': item['format']
+        }
+        artistName = song.get('artistName') if song.get('artistName') else 'UnKnown'
+        filename = '%s-%s.%s' % (artistName, song.get('songName'), item['format'])
+        download(constants.downloadUrl, params, os.path.join(self.download_dir, filename))
+
+
+
