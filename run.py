@@ -3,9 +3,12 @@
 
 from box.music import BaiduMusicBox
 
-BAIDU_USERNAME = '594611460@qq.com'
-BAIDU_PASSWORD = 'xxxxxx'
+BAIDU_USERNAME = ''
+BAIDU_PASSWORD = ''
+
+
 
 if __name__ == '__main__':
+    parser = optparse.OptionParser()
     baidubox = BaiduMusicBox(BAIDU_USERNAME, BAIDU_PASSWORD)
     baidubox.fetch()

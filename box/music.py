@@ -27,11 +27,11 @@ class BaiduMusicBox(object):
             os.makedirs(download_dir)
         self.download_dir = download_dir
 
-    def search(self,keyword):
-        response = self.api.search(keyword)
+    def search(self,keyword, page_no=1):
+        response = self.api.search(keyword, page_no)
         songs = response.get('song_list')
         for song in songs:
-            print song.get('song_id'),song.get('title')
+            print song.get('song_id'),song.get('title'), '---->', song.get('author')
 
     def collect_list(self):
         print u'我的收藏'
@@ -53,18 +53,32 @@ class BaiduMusicBox(object):
             print song.get('songName')
             self.__do_download(song)
 
+    def downdload_by_songid(self, songId):
+        song = self.api.get_song_info([songId])
+        if song:
+            print song[0]
+            self.__do_download(song[0])
+
     def fetch(self):
         response = self.api.get_playlist()
         if response:
             for plist in response:
-                print u'获取播放列表 >> ', plist['listTitle']
+                print u'获取歌单 >> %s ,共%s首'%( plist['listTitle'], plist['listTotal'])
                 songids = self.api.get_list_detail(plist.get('listId'))
                 songlist = self.api.get_song_info(songids)
+                print '*' * 40
+                for s in songlist:
+                    print '%s--%s--%s'%(s['songId'], s['artistName'], s['songName'])
+                print '*' * 40
                 for song in songlist:
                     self.__do_download(song)
 
     def __do_download(self, song):
+        """
+        下载歌曲, flac的格式优先,如果没有flac的就下载比特率最高的
+        """
         song_formats = self.api.get_song_format(song.get('songId'))
+        #返回的格式中是否有flac格式
         flac_fmt = [v for v in  song_formats.values() if v and v['format'] == 'flac']
         if flac_fmt:
             item = flac_fmt[0]
